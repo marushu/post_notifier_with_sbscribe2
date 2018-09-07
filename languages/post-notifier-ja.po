@@ -1,0 +1,60 @@
+# Copyright (C) 2016 Post Notifier
+# This file is distributed under the same license as the Post Notifier package.
+msgid ""
+msgstr ""
+"Project-Id-Version: Post Notifier 0.5\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/post-notifier\n"
+"POT-Creation-Date: 2016-01-07 06:10:24+00:00\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2018-09-08 04:42+0900\n"
+"Language-Team: \n"
+"X-Generator: Poedit 2.1.1\n"
+"Last-Translator: \n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"Language: ja\n"
+
+#: post-notifier.php:133
+msgid "Check your email({$email}) address."
+msgstr "メールアドレス（{$email}）を確認してください。保存されませんでした。"
+
+#: post-notifier.php:167 post-notifier.php:220
+msgid "Select the post type"
+msgstr "投稿タイプを選択"
+
+#: post-notifier.php:205
+msgid "Post Notifier settings"
+msgstr "Post Notifier 設定"
+
+#: post-notifier.php:212
+msgid "Set e-mail<br />(Comma separated.)"
+msgstr "送信先e-mailを設定<br>（カンマ区切り）"
+
+#: post-notifier.php:228
+msgid "Set sender email"
+msgstr "送信元メールアドレス"
+
+#: post-notifier.php:238
+msgid "Set e-mail, select post-type"
+msgstr "送信先e-mail、投稿タイプを設定"
+
+#. Plugin Name of the plugin/theme
+msgid "Post Notifier"
+msgstr ""
+
+#. Plugin URI of the plugin/theme
+msgid "https://github.com/marushu/post-notifier"
+msgstr ""
+
+#. Description of the plugin/theme
+msgid "Send information to the specified e-mail address when the post published."
+msgstr "投稿公開時に指定したメールアドレスへ情報を送信します。"
+
+#. Author of the plugin/theme
+msgid "Shuhei Nishimura"
+msgstr ""
+
+#. Author URI of the plugin/theme
+msgid "http://private.hibou-web.com"
+msgstr ""
