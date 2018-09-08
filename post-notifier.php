@@ -447,3 +447,4 @@ class Post_Notifier {
 		<?php
 	}
 }
+
