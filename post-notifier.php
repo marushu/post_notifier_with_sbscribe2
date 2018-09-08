@@ -83,6 +83,9 @@ class Post_Notifier {
 		$sender_email = isset( $options['sender_email_field'] )
 			? $options['sender_email_field']
 			: get_option( 'admin_email' );
+		$signature    = isset( $options['signature_field'] )
+            ? $options['signature_field']
+            : '';
 
 		$title       = wp_trim_words( esc_html( $post->post_title ), 100, '…' );
 		$permalink   = esc_url( get_permalink( intval( $post->ID ) ) );
@@ -117,14 +120,7 @@ class Post_Notifier {
 		//$post_content = wp_strip_all_tags( $post->post_content );
 		$post_content  = $post->post_content;
 		$post_content  = sanitize_textarea_field( $post_content );
-		$signature     = '';
-		$signature    .= '' . "\n";
-		$signature    .= '' . "\n";
-		$signature    .= '/************************************************' . "\n";
-		$signature    .= '樟南高等学校' . "\n";
-		$signature    .= 'URL : http://www.shonan-h.ac.jp' . "\n";
-		$signature    .= '************************************************/' . "\n";
-
+		$post_content .= "\n\n";
 		$post_content .= $signature;
 
 		//$post_content = wp_trim_words( $post_content, 50, '…' );
@@ -239,6 +235,15 @@ class Post_Notifier {
             ? $sender_email
             : '';
 
+		$signature = isset( $input['signature_field'] )
+            ? esc_textarea( $input['signature_field'] )
+            : '';
+
+		$new_input['signature_field'] = ! empty( $signature )
+            ? $signature
+            : '';
+
+
 		return $new_input;
 
 	}
@@ -298,6 +303,14 @@ class Post_Notifier {
 			'post_notifier_notifierpage_section'
 		);
 
+		add_settings_field(
+			'signature_field',
+			__( 'Set sender signature', 'post-notifier' ),
+			array( $this, 'from_signnature_render' ),
+			'notifierpage',
+			'post_notifier_notifierpage_section'
+		);
+
 	}
 
 	/**
@@ -324,15 +337,12 @@ class Post_Notifier {
                         WHERE active = %s",
 			1
 		);
-		$emails = $wpdb->get_col( $prepared_sql );
+		//$emails = $wpdb->get_col( $prepared_sql );
 		$emails  = array_unique( $emails );
-
 		$emails_num = count( $emails );
-
 		$emails  = ! empty( $emails ) && is_array( $emails )
             ? implode( ', ', $emails )
             : '';
-
 		?>
         <span><?php echo intval( $emails_num ); ?>通のメールへ送信</span>
 		<textarea name="post_notifier_settings[email_field]" id="post_notifier_settings[email_field]" cols="100" width="auto" height="auto" rows="5"><?php echo esc_html( $emails ); ?></textarea>
@@ -402,6 +412,22 @@ class Post_Notifier {
 		<?php
 
 	}
+
+	/**
+	 * Output Sender e-mail signature.
+	 */
+	public function from_signnature_render() {
+
+		$options = get_option( 'post_notifier_settings' );
+		$signature  = isset( $options['signature_field'] ) ? $options['signature_field'] : '';
+
+	?>
+
+        <textarea name="post_notifier_settings[signature_field]" id="post_notifier_settings[signature_field]" cols="100" width="auto" height="auto" rows="5"><?php echo esc_html( $signature ); ?></textarea>
+
+    <?php
+
+    }
 
 	/**
 	 * Output Post Notifier page form.
