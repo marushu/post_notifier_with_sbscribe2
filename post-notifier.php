@@ -117,13 +117,11 @@ class Post_Notifier {
 			$attachments[] = '';
 		}
 
-		//$post_content = wp_strip_all_tags( $post->post_content );
 		$post_content  = $post->post_content;
 		$post_content  = sanitize_textarea_field( $post_content );
 		$post_content .= "\n\n";
 		$post_content .= $signature;
 
-		//$post_content = wp_trim_words( $post_content, 50, '…' );
 		$subject = sprintf( '%s' . PHP_EOL, trim( $title ) );
 		$message .= sprintf( '%s' . PHP_EOL, trim( $post_content ) );
 		$headers[] = 'From:' . sanitize_email( $sender_email );
@@ -134,26 +132,20 @@ class Post_Notifier {
 				return;
 			}
 
-			$to[]      = sprintf( '%s', sanitize_email( $email ) );
+			$to      = 'oshirase@shonan-h.ac.jp';
+			$headers[] = 'BCC:' . $email;
 
 		}
 
-		foreach ( $to as $each_email ) {
+		if ( in_array( $post->post_type, $post_types, true ) && 'publish' === $new_status && 'publish' !== $old_status ) {
 
-			/**
-			 * Check post status if post status is 'publish' is no fire
-			 */
-			if ( in_array( $post->post_type, $post_types, true ) && 'publish' === $new_status && 'publish' !== $old_status ) {
+			add_filter( 'wp_mail_from', function( $sender_email ) {
+				return sanitize_email( $sender_email );
+			} );
 
-				add_filter( 'wp_mail_from', function( $sender_email ) {
-					return sanitize_email( $sender_email );
-				} );
+			wp_mail( $to, $subject, $message, $headers, $attachments );
 
-				wp_mail( $each_email, $subject, $message, $headers, $attachments );
-
-			}
-
-        }
+		}
 
 	}
 
