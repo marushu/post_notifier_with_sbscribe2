@@ -320,7 +320,7 @@ class Post_Notifier {
 	public function email_field_render() {
 
 		$options = get_option( 'post_notifier_settings' );
-		$emails  = isset( $options['email_field'] ) ? $options['email_field'] : '';
+		//$emails  = isset( $options['email_field'] ) ? $options['email_field'] : '';
 
 		global $wpdb;
 		$prepared_sql = $wpdb->prepare(
@@ -329,7 +329,7 @@ class Post_Notifier {
                         WHERE active = %s",
 			1
 		);
-		//$emails = $wpdb->get_col( $prepared_sql );
+		$emails = $wpdb->get_col( $prepared_sql );
 		$emails  = array_unique( $emails );
 		$emails_num = count( $emails );
 		$emails  = ! empty( $emails ) && is_array( $emails )
@@ -339,16 +339,6 @@ class Post_Notifier {
         <span><?php echo intval( $emails_num ); ?>通のメールへ送信</span>
 		<textarea name="post_notifier_settings[email_field]" id="post_notifier_settings[email_field]" cols="100" width="auto" height="auto" rows="5"><?php echo esc_html( $emails ); ?></textarea>
 		<?php
-
-//		global $wpdb;
-//		$prepared_sql = $wpdb->prepare(
-//		        "SELECT email
-//                        FROM wp_subscribe2
-//                        WHERE active = %s",
-//                        1
-//            );
-//         $subscribe_active_emails = $wpdb->get_col( $prepared_sql );
-
 
 	}
 
