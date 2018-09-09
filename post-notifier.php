@@ -132,7 +132,7 @@ class Post_Notifier {
 				return;
 			}
 
-			$to      = 'oshirase@shonan-h.ac.jp';
+			$to      = $sender_email;
 			$headers[] = 'BCC:' . $email;
 
 		}
