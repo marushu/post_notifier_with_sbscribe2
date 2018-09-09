@@ -11,6 +11,14 @@
  * @package Post Notifier
  */
 
+/**
+ * Set the path.
+ */
+define( 'POST_NOTIFIRE_VERSION', '0.5.0' );
+define( 'POST_NOTIFIRE_PATH', trailingslashit( dirname( __FILE__ ) ) );
+define( 'POST_NOTIFIRE_DIR', trailingslashit( dirname( plugin_basename( __FILE__ ) ) ) );
+define( 'POST_NOTIFIRE_URL', plugin_dir_url( dirname( __FILE__ ) ) . POST_NOTIFIRE_DIR );
+
 if ( class_exists( 'Post_Notifier' ) ) {
 	$post_notifier = new Post_Notifier();
 }
@@ -32,6 +40,7 @@ class Post_Notifier {
 		add_action( 'plugins_loaded', array( $this, 'load_textdomain' ) );
 		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 		add_action( 'admin_init', array( $this, 'settings_init' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'post_notifier_admin_enqueue_scripts' ) );
 		register_activation_hook( __FILE__, array( $this, 'activate' ) );
 
 	}
@@ -47,6 +56,8 @@ class Post_Notifier {
 				'email_field'        => array(),
 				'post_type_field'    => array(),
 				'sender_email_field' => '',
+                'signature_field'    => '',
+                'debug_mode_field'   => '',
 			);
 			update_option( 'post_notifier_settings', $default_value );
 		}
@@ -88,7 +99,6 @@ class Post_Notifier {
             : '';
 
 		$title       = wp_trim_words( esc_html( $post->post_title ), 100, '…' );
-		$permalink   = esc_url( get_permalink( intval( $post->ID ) ) );
 		$message     = '';
 		$attachments = array();
 
@@ -184,7 +194,7 @@ class Post_Notifier {
 				} else { // Success!
 
 					$shaped_emails[]            = $email;
-					$new_input['email_field'] = isset( $this->options['email_field'] ) ? $shaped_emails : '';
+					$new_input['email_field'] = isset( $options['email_field'] ) ? $shaped_emails : '';
 
 				}
 			}
@@ -227,6 +237,9 @@ class Post_Notifier {
             ? $sender_email
             : '';
 
+		/**
+		 * Signature
+		 */
 		$signature = isset( $input['signature_field'] )
             ? esc_textarea( $input['signature_field'] )
             : '';
@@ -235,6 +248,16 @@ class Post_Notifier {
             ? $signature
             : '';
 
+		/**
+		 * Debug mode
+		 */
+		$debug_mode = isset( $input['debug_mode_field'] )
+            ? $input['debug_mode_field']
+            : '';
+
+		$new_input['debug_mode_field'] = ! empty( $debug_mode )
+            ? 'on'
+            : '';
 
 		return $new_input;
 
@@ -303,6 +326,14 @@ class Post_Notifier {
 			'post_notifier_notifierpage_section'
 		);
 
+		add_settings_field(
+			'debug_mode_field',
+			__( 'If you want to debug, check this option. :)', 'post-notifier' ),
+			array( $this, 'debug_mode_render' ),
+			'notifierpage',
+			'post_notifier_notifierpage_section'
+		);
+
 	}
 
 	/**
@@ -320,24 +351,40 @@ class Post_Notifier {
 	public function email_field_render() {
 
 		$options = get_option( 'post_notifier_settings' );
-		//$emails  = isset( $options['email_field'] ) ? $options['email_field'] : '';
+		$debug_mode = isset ( $options['debug_mode_field'] )
+            ? $options['debug_mode_field']
+            : '';
+		$debug_mode_class = '';
 
-		global $wpdb;
-		$prepared_sql = $wpdb->prepare(
-			"SELECT email
+		if ( $debug_mode === 'on' ) {
+
+			$emails = isset( $options['email_field'] )
+                ? $options['email_field']
+                : '';
+			$debug_mode_class = 'now_debuging';
+
+		} else {
+
+			global $wpdb;
+			$prepared_sql = $wpdb->prepare(
+				"SELECT email
                         FROM wp_subscribe2
                         WHERE active = %s",
-			1
-		);
-		$emails = $wpdb->get_col( $prepared_sql );
+				1
+			);
+			$emails = $wpdb->get_col( $prepared_sql );
+
+		}
+
 		$emails  = array_unique( $emails );
 		$emails_num = count( $emails );
 		$emails  = ! empty( $emails ) && is_array( $emails )
             ? implode( ', ', $emails )
             : '';
+
 		?>
         <span><?php echo intval( $emails_num ); ?>通のメールへ送信</span>
-		<textarea name="post_notifier_settings[email_field]" id="post_notifier_settings[email_field]" cols="100" width="auto" height="auto" rows="5"><?php echo esc_html( $emails ); ?></textarea>
+		<textarea name="post_notifier_settings[email_field]" id="post_notifier_settings[email_field]" class="all_email <?php echo esc_attr( $debug_mode_class ); ?>" cols="70" width="auto" height="auto" rows="5"><?php echo esc_html( $emails ); ?></textarea>
 		<?php
 
 	}
@@ -402,14 +449,53 @@ class Post_Notifier {
 
 		$options = get_option( 'post_notifier_settings' );
 		$signature  = isset( $options['signature_field'] ) ? $options['signature_field'] : '';
-
 	?>
 
-        <textarea name="post_notifier_settings[signature_field]" id="post_notifier_settings[signature_field]" cols="100" width="auto" height="auto" rows="5"><?php echo esc_html( $signature ); ?></textarea>
+        <textarea name="post_notifier_settings[signature_field]" id="post_notifier_settings[signature_field]" cols="70" width="auto" height="auto" rows="5"><?php echo esc_html( $signature ); ?></textarea>
 
     <?php
 
     }
+
+	/**
+	 * Debug mode.
+	 */
+	public function debug_mode_render() {
+
+	    $options = get_option( 'post_notifier_settings' );
+	    $debug_mode = isset( $options['debug_mode_field'] )
+            ? $options['debug_mode_field']
+            : '';
+		$checked = $debug_mode;
+		$current = 'on';
+		$echo = true;
+	?>
+        <label class="debug_check_label" for="post_notifier_settings[debug_mode_field]">
+        <input type="checkbox" id="post_notifier_settings[debug_mode_field]" name="post_notifier_settings[debug_mode_field]" class="debug_check" <?php echo checked( $checked, $current, $echo ); ?>>
+
+            <strong>Debug Mode</strong>
+        </label>
+        <div id="here"></div>
+
+    <?php
+    }
+
+	/**
+	 * Load scripts.
+	 */
+	public function post_notifier_admin_enqueue_scripts( $hook_suffix ) {
+
+		if ( false === strpos( $hook_suffix, 'post_notifier' ) )
+			return;
+		wp_enqueue_script(
+			'post_notifire_js',
+			POST_NOTIFIRE_URL . 'js/post_notifier_option_page.js',
+			array( 'jquery' ),
+			'',
+			true
+		);
+
+	}
 
 	/**
 	 * Output Post Notifier page form.
